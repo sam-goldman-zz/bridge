@@ -1,11 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import { ethers } from 'ethers';
+
+const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
 
 function App() {
   const [currency, setCurrency] = useState('ETH');
   const [sourceNetwork, setSourceNetwork] = useState('Select Network')
   const [destinationNetwork, setDestinationNetwork] = useState('Select Network')
   const [sourceCurrencyAmount, setSourceCurrencyAmount] = useState()
+  const [provider, setProvider] = useState(null);
+  const [account, setAccount] = useState(null);
+  const [isBtnDisabled, setIsBtnDisabled] = useState(false);
+  const [alert, setAlert] = useState(null);
+
+  // Detects if the user is already connected to the network on MetaMask
+  useEffect(() => {
+    if (isMetaMaskInstalled) {
+      const getInitialConnection = async () => {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          const account = accounts[0];
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+          setAccount(account);
+          setProvider(provider);
+        }
+      }
+
+      getInitialConnection();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isMetaMaskInstalled) {
+      return;
+    }
+
+    const handleAccountsChanged = async (accounts) => {
+      if (accounts.length === 0) {
+        setProvider(null);
+        setAlert(null);
+        setAccount(null);
+        setIsBtnDisabled(false);
+      }
+      else {
+        const account = accounts[0];
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        setProvider(provider);
+        setAccount(account);
+        setAlert(null);
+      }
+    };
+
+    window.ethereum.on('accountsChanged', handleAccountsChanged);
+
+    return () => window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+  }, []);
+
+  useEffect(() => {
+    if (!isMetaMaskInstalled) {
+      return;
+    }
+
+    const handleDisconnect = (error) => {
+      setAlert('You are disconnected from the network! Please cancel the network request in MetaMask.');
+      console.error('User disconnected from network', error);
+    };
+
+    window.ethereum.on('disconnect', handleDisconnect);
+
+    return () => window.ethereum.removeListener('disconnect', handleDisconnect);
+  }, []);
 
   const handleCurrencyChange = (e) => {
     setCurrency(e.target.value)
@@ -37,6 +103,26 @@ function App() {
     setDestinationNetwork(tmpSourceNetwork);
   }
 
+  const handleWalletBtnClick = async () => {
+    if (isBtnDisabled) {
+      return;
+    }
+    setIsBtnDisabled(true);
+
+    if (!isMetaMaskInstalled) {
+      setAlert('Please install MetaMask, then refresh this page!');
+    }
+    else {
+      try {
+        // If this connection request is successful, then handleAccountsChanged is automatically called.
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+      } catch (e) {
+        console.error("Error when requesting user's MetaMask account", e);
+      }
+    }
+    setIsBtnDisabled(false);
+  }
+
   let displayedSourceCurrency;
   if (currency === 'ETH' && (sourceNetwork === 'Polygon' || sourceNetwork === 'Gnosis')) {
     displayedSourceCurrency = 'WETH'
@@ -61,6 +147,13 @@ function App() {
 
   return (
     <>
+      <div>
+        <button
+          disabled={isBtnDisabled}
+          onClick={() => handleWalletBtnClick()}>
+          Connect Wallet
+        </button>
+      </div>
       <div>
         Send
         <select value={currency} onChange={(e) => handleCurrencyChange(e)}>
