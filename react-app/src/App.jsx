@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { ethers } from 'ethers';
+import AccountButton from './AccountButton.jsx';
 
 const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
+
+const nativeCurrencies = {
+  'ETH': ''
+}
 
 function App() {
   const [currency, setCurrency] = useState('ETH');
   const [sourceNetwork, setSourceNetwork] = useState('Select Network')
   const [destinationNetwork, setDestinationNetwork] = useState('Select Network')
-  const [sourceCurrencyAmount, setSourceCurrencyAmount] = useState()
+  const [sourceCurrencyAmount, setSourceCurrencyAmount] = useState('')
   const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState(null);
   const [isBtnDisabled, setIsBtnDisabled] = useState(false);
   const [alert, setAlert] = useState(null);
+  const [nativeTokenBalance, setNativeTokenBalance] = useState(null);
+  const [chainId, setChainId] = useState(null)
 
   // Detects if the user is already connected to the network on MetaMask
   useEffect(() => {
@@ -20,16 +27,26 @@ function App() {
       const getInitialConnection = async () => {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         if (accounts.length > 0) {
-          const account = accounts[0];
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-          setAccount(account);
-          setProvider(provider);
+          setupControls(accounts[0])
         }
       }
 
       getInitialConnection();
     }
+  }, []);
+
+  useEffect(() => {
+    if (!isMetaMaskInstalled) {
+      return;
+    }
+
+    const handleChainChanged = (chainId) => {
+      setChainId(chainId)
+    }
+
+    window.ethereum.on('chainChanged', handleChainChanged);
+
+    return () => window.ethereum.removeListener('chainChanged', handleChainChanged);
   }, []);
 
   useEffect(() => {
@@ -45,11 +62,7 @@ function App() {
         setIsBtnDisabled(false);
       }
       else {
-        const account = accounts[0];
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        setProvider(provider);
-        setAccount(account);
-        setAlert(null);
+        setupControls(accounts[0])
       }
     };
 
@@ -95,6 +108,19 @@ function App() {
 
   const handleSourceCurrencyAmountChange = (e) => {
     setSourceCurrencyAmount(e.target.value)
+  }
+
+  const setupControls = async (account) => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const balance = await provider.getBalance(account);
+    const formattedBalance = ethers.utils.formatEther(balance);
+    const roundedBalance = parseFloat(formattedBalance).toFixed(3);
+    const chainId = await ethereum.request({ method: 'eth_chainId' });
+    setChainId(chainId);
+    setNativeTokenBalance(roundedBalance);
+    setAccount(account);
+    setProvider(provider);
+    setAlert(null);
   }
 
   const handleNetworkSwap = (e) => {
@@ -145,14 +171,27 @@ function App() {
     displayedDestinationCurrency = currency
   }
 
+  let accountControls;
+  if (account) {
+    accountControls = <div>
+      {nativeTokenBalance}
+      {currency}
+      <AccountButton account={account}/>
+    </div>
+  }
+  else {
+    accountControls = 
+      <button
+        disabled={isBtnDisabled}
+        onClick={() => handleWalletBtnClick()}>
+          Connect Wallet
+      </button>
+  }
+
   return (
     <>
       <div>
-        <button
-          disabled={isBtnDisabled}
-          onClick={() => handleWalletBtnClick()}>
-          Connect Wallet
-        </button>
+        {accountControls}
       </div>
       <div>
         Send
