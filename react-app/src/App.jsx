@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { ethers } from 'ethers';
 import AccountButton from './AccountButton.jsx';
+import useChainId from './useChainId';
+import TokenBalanceCard from './TokenBalanceCard.jsx';
 
 const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
-
-const nativeCurrencies = {
-  'ETH': ''
-}
 
 function App() {
   const [currency, setCurrency] = useState('ETH');
@@ -18,8 +16,7 @@ function App() {
   const [account, setAccount] = useState(null);
   const [isBtnDisabled, setIsBtnDisabled] = useState(false);
   const [alert, setAlert] = useState(null);
-  const [nativeTokenBalance, setNativeTokenBalance] = useState(null);
-  const [chainId, setChainId] = useState(null)
+  const chainId = useChainId()
 
   // Detects if the user is already connected to the network on MetaMask
   useEffect(() => {
@@ -35,19 +32,19 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!isMetaMaskInstalled) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!isMetaMaskInstalled) {
+  //     return;
+  //   }
 
-    const handleChainChanged = (chainId) => {
-      setChainId(chainId)
-    }
+  //   const handleChainChanged = (chainId) => {
+  //     setChainId(chainId)
+  //   }
 
-    window.ethereum.on('chainChanged', handleChainChanged);
+  //   window.ethereum.on('chainChanged', handleChainChanged);
 
-    return () => window.ethereum.removeListener('chainChanged', handleChainChanged);
-  }, []);
+  //   return () => window.ethereum.removeListener('chainChanged', handleChainChanged);
+  // }, []);
 
   useEffect(() => {
     if (!isMetaMaskInstalled) {
@@ -112,12 +109,6 @@ function App() {
 
   const setupControls = async (account) => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const balance = await provider.getBalance(account);
-    const formattedBalance = ethers.utils.formatEther(balance);
-    const roundedBalance = parseFloat(formattedBalance).toFixed(3);
-    const chainId = await ethereum.request({ method: 'eth_chainId' });
-    setChainId(chainId);
-    setNativeTokenBalance(roundedBalance);
     setAccount(account);
     setProvider(provider);
     setAlert(null);
@@ -174,8 +165,7 @@ function App() {
   let accountControls;
   if (account) {
     accountControls = <div>
-      {nativeTokenBalance}
-      {currency}
+      <TokenBalanceCard account={account} provider={provider}></TokenBalanceCard>
       <AccountButton account={account}/>
     </div>
   }
