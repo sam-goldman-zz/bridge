@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { ethers } from 'ethers';
 import AccountButton from './AccountButton.jsx';
-import useChainId from './useChainId';
 import TokenBalanceCard from './TokenBalanceCard.jsx';
+import useMetamaskProvider from './useMetamaskProvider.jsx';
 
 const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
 
@@ -12,11 +12,12 @@ function App() {
   const [sourceNetwork, setSourceNetwork] = useState('Select Network')
   const [destinationNetwork, setDestinationNetwork] = useState('Select Network')
   const [sourceCurrencyAmount, setSourceCurrencyAmount] = useState('')
-  const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState(null);
   const [isBtnDisabled, setIsBtnDisabled] = useState(false);
   const [alert, setAlert] = useState(null);
-  const chainId = useChainId()
+  const provider = useMetamaskProvider();
+
+  console.log(provider);
 
   // Detects if the user is already connected to the network on MetaMask
   useEffect(() => {
@@ -32,20 +33,6 @@ function App() {
     }
   }, []);
 
-  // useEffect(() => {
-  //   if (!isMetaMaskInstalled) {
-  //     return;
-  //   }
-
-  //   const handleChainChanged = (chainId) => {
-  //     setChainId(chainId)
-  //   }
-
-  //   window.ethereum.on('chainChanged', handleChainChanged);
-
-  //   return () => window.ethereum.removeListener('chainChanged', handleChainChanged);
-  // }, []);
-
   useEffect(() => {
     if (!isMetaMaskInstalled) {
       return;
@@ -53,7 +40,6 @@ function App() {
 
     const handleAccountsChanged = async (accounts) => {
       if (accounts.length === 0) {
-        setProvider(null);
         setAlert(null);
         setAccount(null);
         setIsBtnDisabled(false);
@@ -108,9 +94,7 @@ function App() {
   }
 
   const setupControls = async (account) => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
     setAccount(account);
-    setProvider(provider);
     setAlert(null);
   }
 
@@ -163,7 +147,7 @@ function App() {
   }
 
   let accountControls;
-  if (account) {
+  if (account && provider) {
     accountControls = <div>
       <TokenBalanceCard account={account} provider={provider}></TokenBalanceCard>
       <AccountButton account={account}/>
