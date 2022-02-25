@@ -4,8 +4,42 @@ import { ethers } from 'ethers';
 import AccountButton from './AccountButton.jsx';
 import TokenBalanceCard from './TokenBalanceCard.jsx';
 import useMetamaskProvider from './useMetamaskProvider.jsx';
+import BalanceText from './BalanceText.jsx'
 
 const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
+
+const networks = [
+  {
+    'name': 'homestead',
+    'nativeTokenSymbol': 'ETH',
+    'displayName': 'Mainnet',
+    'chainId': '0x1'
+  },
+  {
+    'name': 'gnosis',
+    'nativeTokenSymbol': 'XDAI',
+    'displayName': 'Gnosis',
+    'chainId': '0xa4b1'
+  },
+  {
+    'name': 'matic',
+    'nativeTokenSymbol': 'MATIC',
+    'displayName': 'Polygon',
+    'chainId': '0xa'
+  },
+  {
+    'name': 'optimism',
+    'nativeTokenSymbol': 'ETH',
+    'displayName': 'Optimism',
+    'chainId': '0x64'
+  },
+  {
+    'name': 'arbitrum',
+    'nativeTokenSymbol': 'ETH',
+    'displayName': 'Arbitrum',
+    'chainId': '0x89'
+  },
+]
 
 function App() {
   const [currency, setCurrency] = useState('ETH');
@@ -105,7 +139,7 @@ function App() {
   let accountControls;
   if (account && provider) {
     accountControls = <div>
-      <TokenBalanceCard account={account} provider={provider} chainId={chainId}></TokenBalanceCard>
+      <TokenBalanceCard account={account} provider={provider} chainId={chainId}/>
       <AccountButton account={account}/>
     </div>
   }
@@ -118,6 +152,17 @@ function App() {
       </button>
   }
 
+  let sourceBalanceText;
+  if (account && (sourceNetwork !== 'Source Network')) {
+    const infuraProvider = new ethers.providers.InfuraProvider(Number('0x1'), process.env.REACT_APP_INFURA_API_KEY)
+    sourceBalanceText =
+      <BalanceText
+        chainId={chainId}
+        account={account}
+        provider={infuraProvider}
+      />
+  }
+
   return (
     <>
       <div>
@@ -126,24 +171,29 @@ function App() {
       <div>
         Send
         <select value={currency} onChange={(e) => handleCurrencyChange(e)}>
-          <option>ETH</option>
-          <option>USDC</option>
-          <option>USDT</option>
-          <option>MATIC</option>
-          <option>DAI</option>
+          {networks.map(network => (
+            <option
+              value={network.nativeTokenSymbol}
+              key={network.chainId}>
+                {network.nativeTokenSymbol}
+            </option>
+          ))}
         </select>
       </div>
       
       <div>
         From
         <select value={sourceNetwork} onChange={(e) => handleSourceNetworkChange(e)}>
-          <option>Select Network</option>
-          <option>Mainnet</option>
-          <option>Polygon</option>
-          <option>Gnosis</option>
-          <option>Arbitrum</option>
-          <option>Optimism</option>
+          <option value="selectNetwork">Select Network</option>
+          {networks.map(network => (
+            <option
+              value={network.displayName}
+              key={network.chainId}>
+                {network.displayName}
+            </option>
+          ))}
         </select>
+        {sourceBalanceText}
         <input type="text"
           value={sourceCurrencyAmount}
           placeholder="0.0"
