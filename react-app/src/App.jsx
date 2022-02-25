@@ -8,42 +8,46 @@ import BalanceText from './BalanceText.jsx'
 
 const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
 
-const networks = [
-  {
+// for each network:
+// if currency == networks[sourceNetwork][nativetokensymbol]: use provider (metamask)
+// else: use infura provider w/ contract abi
+
+const networks = {
+  homestead: {
     'name': 'homestead',
     'nativeTokenSymbol': 'ETH',
     'displayName': 'Mainnet',
     'chainId': '0x1'
   },
-  {
+  gnosis: {
     'name': 'gnosis',
     'nativeTokenSymbol': 'XDAI',
     'displayName': 'Gnosis',
     'chainId': '0xa4b1'
   },
-  {
+  matic: {
     'name': 'matic',
     'nativeTokenSymbol': 'MATIC',
     'displayName': 'Polygon',
     'chainId': '0xa'
   },
-  {
+  optimism: {
     'name': 'optimism',
     'nativeTokenSymbol': 'ETH',
     'displayName': 'Optimism',
     'chainId': '0x64'
   },
-  {
+  arbitrum: {
     'name': 'arbitrum',
     'nativeTokenSymbol': 'ETH',
     'displayName': 'Arbitrum',
     'chainId': '0x89'
-  },
-]
+  }
+}
 
 function App() {
   const [currency, setCurrency] = useState('ETH');
-  const [sourceNetwork, setSourceNetwork] = useState('Select Network')
+  const [sourceNetwork, setSourceNetwork] = useState("noneSelected")
   const [destinationNetwork, setDestinationNetwork] = useState('Select Network')
   const [sourceCurrencyAmount, setSourceCurrencyAmount] = useState('')
   const [isBtnDisabled, setIsBtnDisabled] = useState(false);
@@ -115,10 +119,10 @@ function App() {
   }
 
   let displayedSourceCurrency;
-  if (currency === 'ETH' && (sourceNetwork === 'Polygon' || sourceNetwork === 'Gnosis')) {
+  if (currency === 'ETH' && (sourceNetwork === 'matic' || sourceNetwork === 'gnosis')) {
     displayedSourceCurrency = 'WETH'
   }
-  else if (currency === 'DAI' && sourceNetwork === 'Gnosis') {
+  else if (currency === 'DAI' && sourceNetwork === 'gnosis') {
     displayedSourceCurrency = 'XDAI'
   }
   else {
@@ -153,8 +157,9 @@ function App() {
   }
 
   let sourceBalanceText;
-  if (account && (sourceNetwork !== 'Source Network')) {
-    const infuraProvider = new ethers.providers.InfuraProvider(Number('0x1'), process.env.REACT_APP_INFURA_API_KEY)
+  if (account && (sourceNetwork !== 'noneSelected')) {
+    console.log(sourceNetwork)
+    const infuraProvider = new ethers.providers.InfuraProvider(sourceNetwork, process.env.REACT_APP_INFURA_API_KEY)
     sourceBalanceText =
       <BalanceText
         chainId={chainId}
@@ -171,25 +176,23 @@ function App() {
       <div>
         Send
         <select value={currency} onChange={(e) => handleCurrencyChange(e)}>
-          {networks.map(network => (
-            <option
-              value={network.nativeTokenSymbol}
-              key={network.chainId}>
-                {network.nativeTokenSymbol}
-            </option>
-          ))}
+          <option>ETH</option>
+          <option>USDC</option>
+          <option>USDT</option>
+          <option>MATIC</option>
+          <option>DAI</option>
         </select>
       </div>
       
       <div>
         From
         <select value={sourceNetwork} onChange={(e) => handleSourceNetworkChange(e)}>
-          <option value="selectNetwork">Select Network</option>
-          {networks.map(network => (
+          <option value="noneSelected">Select Network</option>
+          {Object.keys(networks).map(network => (
             <option
-              value={network.displayName}
-              key={network.chainId}>
-                {network.displayName}
+              value={network}
+              key={networks[network].chainId}>
+                {networks[network].displayName}
             </option>
           ))}
         </select>
