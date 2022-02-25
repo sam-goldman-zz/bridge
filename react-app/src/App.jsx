@@ -12,47 +12,9 @@ function App() {
   const [sourceNetwork, setSourceNetwork] = useState('Select Network')
   const [destinationNetwork, setDestinationNetwork] = useState('Select Network')
   const [sourceCurrencyAmount, setSourceCurrencyAmount] = useState('')
-  const [account, setAccount] = useState(null);
   const [isBtnDisabled, setIsBtnDisabled] = useState(false);
   const [alert, setAlert] = useState(null);
-  const provider = useMetamaskProvider();
-
-  console.log(provider);
-
-  // Detects if the user is already connected to the network on MetaMask
-  useEffect(() => {
-    if (isMetaMaskInstalled) {
-      const getInitialConnection = async () => {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
-          setupControls(accounts[0])
-        }
-      }
-
-      getInitialConnection();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isMetaMaskInstalled) {
-      return;
-    }
-
-    const handleAccountsChanged = async (accounts) => {
-      if (accounts.length === 0) {
-        setAlert(null);
-        setAccount(null);
-        setIsBtnDisabled(false);
-      }
-      else {
-        setupControls(accounts[0])
-      }
-    };
-
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
-
-    return () => window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-  }, []);
+  const [{account, provider, chainId}] = useMetamaskProvider();
 
   useEffect(() => {
     if (!isMetaMaskInstalled) {
@@ -60,7 +22,6 @@ function App() {
     }
 
     const handleDisconnect = (error) => {
-      setAlert('You are disconnected from the network! Please cancel the network request in MetaMask.');
       console.error('User disconnected from network', error);
     };
 
@@ -91,11 +52,6 @@ function App() {
 
   const handleSourceCurrencyAmountChange = (e) => {
     setSourceCurrencyAmount(e.target.value)
-  }
-
-  const setupControls = async (account) => {
-    setAccount(account);
-    setAlert(null);
   }
 
   const handleNetworkSwap = (e) => {
@@ -149,7 +105,7 @@ function App() {
   let accountControls;
   if (account && provider) {
     accountControls = <div>
-      <TokenBalanceCard account={account} provider={provider}></TokenBalanceCard>
+      <TokenBalanceCard account={account} provider={provider} chainId={chainId}></TokenBalanceCard>
       <AccountButton account={account}/>
     </div>
   }

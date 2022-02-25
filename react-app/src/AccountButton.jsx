@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 
 function AccountButton(props) {
+  const { account } = props;
+
   const getDisplayAccount = (account) => {
     const checksumAccount = ethers.utils.getAddress(account); // converts account from lowercase to camelcase
     const firstHalf = checksumAccount.slice(0, 6);
@@ -11,7 +13,7 @@ function AccountButton(props) {
 
   return (
     <button>
-      {getDisplayAccount(props.account)}
+      {getDisplayAccount(account)}
     </button>
   );
 }
