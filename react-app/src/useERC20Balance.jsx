@@ -7,9 +7,9 @@ function useERC20Balance(account, provider, roundedDigits, token, erc20Address) 
   
   const getRoundedBalance = async () => {
     const erc20 = new ethers.Contract(erc20Address, ERC20, provider);
-    const balance = await erc20.balanceOf('0x00290ffc9e9D19bdA7b25c6e44d8ADF55DFBf2dD');
+    const balance = await erc20.balanceOf('0x489ee077994b6658eafa855c308275ead8097c4a');
     const formattedBalance = ethers.utils.formatUnits(balance, token.decimals);
-    const roundedBalance = parseFloat(formattedBalance).toFixed(roundedDigits);
+    const roundedBalance = parseFloat(formattedBalance).toLocaleString(undefined, { maximumFractionDigits: roundedDigits })
     setBalance(roundedBalance);
   }
 

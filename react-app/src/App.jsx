@@ -5,6 +5,7 @@ import AccountButton from './AccountButton.jsx';
 import TokenBalanceCard from './TokenBalanceCard.jsx';
 import useMetamaskProvider from './useMetamaskProvider.jsx';
 import BalanceText from './BalanceText.jsx'
+import DomainHeader from './DomainHeader.jsx';
 
 const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
 
@@ -70,6 +71,29 @@ const erc20Addresses = {
     'WETH': '0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1',
     'USDC': '0xddafbb505ad214d7b80b1f830fccc89b60fb7a83',
     'USDT': '0x4ecaba5870353805a9f068101a40e0f32ed605c6'
+  },
+  homestead: {
+    'USDC': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    'USDT': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+    'MATIC': '0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0',
+    'DAI': '0x6B175474E89094C44Da98b954EedeAC495271d0F'
+  },
+  matic: {
+    'WETH': '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+    'USDC': '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+    'USDT': '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+    'DAI': '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063'
+  },
+  optimism: {
+    'USDC': '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
+    'USDT': '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58',
+    'MATIC': '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
+    'DAI': '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1'
+  },
+  arbitrum: {
+    'USDC': '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+    'USDT': '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+    'DAI': '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1'
   }
 }
 
@@ -77,7 +101,7 @@ function App() {
   const [currency, setCurrency] = useState('ETH');
   const [sourceNetwork, setSourceNetwork] = useState("noneSelected")
   const [destinationNetwork, setDestinationNetwork] = useState('Select Network')
-  const [sourceCurrencyAmount, setSourceCurrencyAmount] = useState('')
+  const [sourceAmount, setSourceAmount] = useState('')
   const [isBtnDisabled, setIsBtnDisabled] = useState(false);
   const [alert, setAlert] = useState(null);
   const [{account, provider, chainId}] = useMetamaskProvider();
@@ -116,8 +140,8 @@ function App() {
     setDestinationNetwork(newDestinationNetwork);
   }
 
-  const handleSourceCurrencyAmountChange = (e) => {
-    setSourceCurrencyAmount(e.target.value)
+  const handleSourceAmount = (e) => {
+    setSourceAmount(e.target.value)
   }
 
   const handleNetworkSwap = (e) => {
@@ -223,6 +247,11 @@ function App() {
           <option>DAI</option>
         </select>
       </div>
+
+      {/* <DomainHeader
+        domain="source"
+        onMaxAmountBtnClick={() => setSourceAmount}
+      /> */}
       
       <div>
         From
@@ -238,15 +267,17 @@ function App() {
         </select>
         {sourceBalanceText}
         <input type="text"
-          value={sourceCurrencyAmount}
+          value={sourceAmount}
           placeholder="0.0"
-          onChange={(e) => handleSourceCurrencyAmountChange(e)}
+          onChange={(e) => handleSourceAmount(e)}
         />
         {displayedSourceCurrency}
       </div>
+
       <div>
         <button onClick={() => handleNetworkSwap()}>↓</button>
       </div>
+
       <div>
         To (estimated)
         <select value={destinationNetwork} onChange={(e) => handleDestinationNetworkChange(e)}>

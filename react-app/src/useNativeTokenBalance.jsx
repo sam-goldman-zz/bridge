@@ -7,7 +7,7 @@ function useNativeTokenBalance(account, provider, roundedDigits) {
   const getRoundedBalance = async () => {
     const balance = await provider.getBalance(account);
     const formattedBalance = ethers.utils.formatEther(balance);
-    const roundedBalance = parseFloat(formattedBalance).toFixed(roundedDigits);
+    const roundedBalance = Number(formattedBalance).toLocaleString(undefined, { maximumFractionDigits: roundedDigits });
     setBalance(roundedBalance);
   }
 
