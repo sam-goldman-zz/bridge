@@ -4,10 +4,8 @@ import { ethers } from 'ethers';
 import AccountButton from './AccountButton.jsx';
 import TokenBalanceCard from './TokenBalanceCard.jsx';
 import useMetamaskProvider from './useMetamaskProvider.jsx';
-import BalanceText from './BalanceText.jsx'
 import useERC20Balance from './useERC20Balance.jsx'
 import useNativeTokenBalance from './useNativeTokenBalance.jsx'
-import MaxAmountButton from './MaxAmountButton';
 import BalanceControls from './BalanceControls';
 
 const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
@@ -103,7 +101,7 @@ const erc20Addresses = {
 function App() {
   const [currency, setCurrency] = useState('ETH');
   const [sourceNetwork, setSourceNetwork] = useState("noneSelected")
-  const [destinationNetwork, setDestinationNetwork] = useState('Select Network')
+  const [destinationNetwork, setDestinationNetwork] = useState('noneSelected')
   const [sourceAmount, setSourceAmount] = useState('')
   const [isBtnDisabled, setIsBtnDisabled] = useState(false);
   const [alert, setAlert] = useState(null);
@@ -211,7 +209,7 @@ function App() {
       </button>
   }
 
-  let balanceControls;
+  let sourceBalanceControls;
   if (account && (sourceNetwork !== 'noneSelected')) {
 
     let customRpcProvider;
@@ -231,7 +229,7 @@ function App() {
       useBalance = useNativeTokenBalance
     }
 
-    balanceControls =
+    sourceBalanceControls =
       <BalanceControls
         account={account}
         provider={customRpcProvider}
@@ -241,6 +239,38 @@ function App() {
         handleClick={setSourceAmount}
       />
   }
+
+  let destinationBalanceControls;
+  if (account && (destinationNetwork !== 'noneSelected')) {
+
+    let customRpcProvider;
+    if (destinationNetwork === 'gnosis') {
+      customRpcProvider = new ethers.providers.JsonRpcProvider('https://rpc.gnosischain.com');
+    }
+    else {
+      customRpcProvider = new ethers.providers.InfuraProvider(destinationNetwork, process.env.REACT_APP_INFURA_API_KEY);
+    }
+
+    let erc20Address, useBalance;
+    if (displayedDestinationCurrency !== networks[destinationNetwork].nativeTokenSymbol) {
+      erc20Address = erc20Addresses[destinationNetwork][displayedDestinationCurrency]
+      useBalance = useERC20Balance
+    }
+    else {
+      useBalance = useNativeTokenBalance
+    }
+
+    destinationBalanceControls =
+    <BalanceControls
+      account={account}
+      provider={customRpcProvider}
+      token={tokens[currency]}
+      erc20Address={erc20Address}
+      useBalance={useBalance}
+    />
+  }
+
+  // diff: source/dest; handeClick prop in BalanceControls; no onClick prop in text input
 
   return (
     <>
@@ -258,8 +288,6 @@ function App() {
         </select>
       </div>
 
-
-      
       <div>
         From
         <select value={sourceNetwork} onChange={(e) => handleSourceNetworkChange(e)}>
@@ -273,13 +301,14 @@ function App() {
           ))}
         </select>
 
-        {balanceControls}
+        {sourceBalanceControls}
 
         <input type="text"
           value={sourceAmount}
           placeholder="0.0"
           onChange={(e) => handleSourceAmount(e)}
         />
+
         {displayedSourceCurrency}
       </div>
 
@@ -290,13 +319,24 @@ function App() {
       <div>
         To (estimated)
         <select value={destinationNetwork} onChange={(e) => handleDestinationNetworkChange(e)}>
-          <option>Select Network</option>
-          <option>Mainnet</option>
-          <option>Polygon</option>
-          <option>Gnosis</option>
-          <option>Arbitrum</option>
-          <option>Optimism</option>
+          <option value="noneSelected">Select Network</option>
+          {Object.keys(networks).map(network => (
+            <option
+              value={network}
+              key={networks[network].chainId}>
+                {networks[network].displayName}
+            </option>
+          ))}
         </select>
+
+        {destinationBalanceControls}
+
+        <input type="text"
+          value={sourceAmount}
+          placeholder="0.0"
+          readOnly={true}
+        />
+
         {displayedDestinationCurrency}
       </div>
     </>
