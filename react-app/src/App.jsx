@@ -5,7 +5,10 @@ import AccountButton from './AccountButton.jsx';
 import TokenBalanceCard from './TokenBalanceCard.jsx';
 import useMetamaskProvider from './useMetamaskProvider.jsx';
 import BalanceText from './BalanceText.jsx'
-import DomainHeader from './DomainHeader.jsx';
+import useERC20Balance from './useERC20Balance.jsx'
+import useNativeTokenBalance from './useNativeTokenBalance.jsx'
+import MaxAmountButton from './MaxAmountButton';
+import BalanceControls from './BalanceControls';
 
 const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
 
@@ -208,7 +211,7 @@ function App() {
       </button>
   }
 
-  let sourceBalanceText;
+  let balanceControls;
   if (account && (sourceNetwork !== 'noneSelected')) {
 
     let customRpcProvider;
@@ -219,16 +222,23 @@ function App() {
       customRpcProvider = new ethers.providers.InfuraProvider(sourceNetwork, process.env.REACT_APP_INFURA_API_KEY);
     }
 
-    let erc20Address;
+    let erc20Address, useBalance;
     if (displayedSourceCurrency !== networks[sourceNetwork].nativeTokenSymbol) {
       erc20Address = erc20Addresses[sourceNetwork][displayedSourceCurrency]
+      useBalance = useERC20Balance
     }
-    sourceBalanceText =
-      <BalanceText
+    else {
+      useBalance = useNativeTokenBalance
+    }
+
+    balanceControls =
+      <BalanceControls
         account={account}
         provider={customRpcProvider}
         token={tokens[currency]}
         erc20Address={erc20Address}
+        useBalance={useBalance}
+        handleClick={setSourceAmount}
       />
   }
 
@@ -248,10 +258,7 @@ function App() {
         </select>
       </div>
 
-      {/* <DomainHeader
-        domain="source"
-        onMaxAmountBtnClick={() => setSourceAmount}
-      /> */}
+
       
       <div>
         From
@@ -265,7 +272,9 @@ function App() {
             </option>
           ))}
         </select>
-        {sourceBalanceText}
+
+        {balanceControls}
+
         <input type="text"
           value={sourceAmount}
           placeholder="0.0"

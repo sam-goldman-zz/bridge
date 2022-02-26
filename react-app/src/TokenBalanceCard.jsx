@@ -11,13 +11,13 @@ const chainIdToNativeToken = {
 function TokenBalanceCard(props) {
   const {account, provider, chainId } = props;
 
-  const roundedDigits = 3;
-  const balance = useNativeTokenBalance(account, provider, roundedDigits)
+  const balance = useNativeTokenBalance(account, provider);
+  const roundedBalance = parseFloat(balance).toLocaleString(undefined, { maximumFractionDigits: 3 })
 
-  if (balance) {
+  if (roundedBalance) {
     return (
       <div>
-        {balance} {chainIdToNativeToken[chainId]}
+        {roundedBalance} {chainIdToNativeToken[chainId]}
       </div>
     )
   }
