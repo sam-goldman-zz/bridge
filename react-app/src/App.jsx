@@ -64,7 +64,7 @@ const tokens = {
   }
 }
 
-const tokenAddresses = {
+const erc20Addresses = {
   gnosis: {
     'MATIC': '0x7122d7661c4564b7c6cd4878b06766489a6028a2',
     'WETH': '0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1',
@@ -195,16 +195,16 @@ function App() {
       customRpcProvider = new ethers.providers.InfuraProvider(sourceNetwork, process.env.REACT_APP_INFURA_API_KEY);
     }
 
-    let tokenAddress;
+    let erc20Address;
     if (displayedSourceCurrency !== networks[sourceNetwork].nativeTokenSymbol) {
-      tokenAddress = tokenAddresses[sourceNetwork][displayedSourceCurrency]
+      erc20Address = erc20Addresses[sourceNetwork][displayedSourceCurrency]
     }
     sourceBalanceText =
       <BalanceText
         account={account}
         provider={customRpcProvider}
         token={tokens[currency]}
-        tokenAddress={tokenAddress}
+        erc20Address={erc20Address}
       />
   }
 

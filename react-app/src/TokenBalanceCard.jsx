@@ -1,4 +1,4 @@
-import useBalance from './useBalance.jsx'
+import useNativeTokenBalance from './useNativeTokenBalance.jsx'
 
 const chainIdToNativeToken = {
   '0x1': 'ETH',
@@ -12,7 +12,7 @@ function TokenBalanceCard(props) {
   const {account, provider, chainId } = props;
 
   const roundedDigits = 3;
-  const balance = useBalance(account, provider, roundedDigits)
+  const balance = useNativeTokenBalance(account, provider, roundedDigits)
 
   if (balance) {
     return (
