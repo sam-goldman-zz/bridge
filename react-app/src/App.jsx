@@ -8,40 +8,68 @@ import BalanceText from './BalanceText.jsx'
 
 const isMetaMaskInstalled = Boolean(window.ethereum && window.ethereum.isMetaMask);
 
-// for each network:
-// if currency == networks[sourceNetwork][nativetokensymbol]: use provider (metamask)
-// else: use infura provider w/ contract abi
-
 const networks = {
   homestead: {
-    'name': 'homestead',
-    'nativeTokenSymbol': 'ETH',
-    'displayName': 'Mainnet',
-    'chainId': '0x1'
+    name: 'homestead',
+    nativeTokenSymbol: 'ETH',
+    displayName: 'Mainnet',
+    chainId: '0x1'
   },
   gnosis: {
-    'name': 'gnosis',
-    'nativeTokenSymbol': 'XDAI',
-    'displayName': 'Gnosis',
-    'chainId': '0xa4b1'
+    name: 'gnosis',
+    nativeTokenSymbol: 'XDAI',
+    displayName: 'Gnosis',
+    chainId: '0xa4b1'
   },
   matic: {
-    'name': 'matic',
-    'nativeTokenSymbol': 'MATIC',
-    'displayName': 'Polygon',
-    'chainId': '0xa'
+    name: 'matic',
+    nativeTokenSymbol: 'MATIC',
+    displayName: 'Polygon',
+    chainId: '0xa'
   },
   optimism: {
-    'name': 'optimism',
-    'nativeTokenSymbol': 'ETH',
-    'displayName': 'Optimism',
-    'chainId': '0x64'
+    name: 'optimism',
+    nativeTokenSymbol: 'ETH',
+    displayName: 'Optimism',
+    chainId: '0x64'
   },
   arbitrum: {
-    'name': 'arbitrum',
-    'nativeTokenSymbol': 'ETH',
-    'displayName': 'Arbitrum',
-    'chainId': '0x89'
+    name: 'arbitrum',
+    nativeTokenSymbol: 'ETH',
+    displayName: 'Arbitrum',
+    chainId: '0x89'
+  }
+}
+
+const tokens = {
+  ETH: {
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  MATIC: {
+    symbol: 'MATIC',
+    decimals: 18,
+  },
+  DAI: {
+    symbol: 'DAI',
+    decimals: 18,
+  },
+  USDC: {
+    symbol: 'USDC',
+    decimals: 6
+  },
+  USDT: {
+    symbol: 'USDT',
+    decimals: 6
+  }
+}
+
+const tokenAddresses = {
+  gnosis: {
+    'MATIC': '0x7122d7661c4564b7c6cd4878b06766489a6028a2',
+    'WETH': '0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1',
+    'USDC': '0xddafbb505ad214d7b80b1f830fccc89b60fb7a83',
+    'USDT': '0x4ecaba5870353805a9f068101a40e0f32ed605c6'
   }
 }
 
@@ -143,7 +171,7 @@ function App() {
   let accountControls;
   if (account && provider) {
     accountControls = <div>
-      <TokenBalanceCard account={account} provider={provider} chainId={chainId}/>
+      <TokenBalanceCard account={account} provider={provider} chainId={chainId} />
       <AccountButton account={account}/>
     </div>
   }
@@ -158,13 +186,25 @@ function App() {
 
   let sourceBalanceText;
   if (account && (sourceNetwork !== 'noneSelected')) {
-    console.log(sourceNetwork)
-    const infuraProvider = new ethers.providers.InfuraProvider(sourceNetwork, process.env.REACT_APP_INFURA_API_KEY)
+
+    let customRpcProvider;
+    if (sourceNetwork === 'gnosis') {
+      customRpcProvider = new ethers.providers.JsonRpcProvider('https://rpc.gnosischain.com');
+    }
+    else {
+      customRpcProvider = new ethers.providers.InfuraProvider(sourceNetwork, process.env.REACT_APP_INFURA_API_KEY);
+    }
+
+    let tokenAddress;
+    if (displayedSourceCurrency !== networks[sourceNetwork].nativeTokenSymbol) {
+      tokenAddress = tokenAddresses[sourceNetwork][displayedSourceCurrency]
+    }
     sourceBalanceText =
       <BalanceText
-        chainId={chainId}
         account={account}
-        provider={infuraProvider}
+        provider={customRpcProvider}
+        token={tokens[currency]}
+        tokenAddress={tokenAddress}
       />
   }
 

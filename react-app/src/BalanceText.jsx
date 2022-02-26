@@ -1,10 +1,10 @@
 import useBalance from './useBalance.jsx'
 
 function BalanceText(props) {
-  const { chainId, account, provider } = props;
-
-  const decimals = 5;
-  const balance = useBalance(chainId, account, provider, decimals)
+  const { account, provider, token, tokenAddress } = props;
+  
+  const roundedDigits = 5;
+  const balance = useBalance(account, provider, roundedDigits, token, tokenAddress);
   return (
     <div>
       Balance: {balance}

@@ -1,24 +1,23 @@
 import useBalance from './useBalance.jsx'
 
-const chainIdToSymbol = {
+const chainIdToNativeToken = {
   '0x1': 'ETH',
+  '0x64': 'XDAI',
   '0xa': 'ETH',
   '0xa4b1': 'ETH',
-  '0x89': 'MATIC',
-  '0x64': 'XDAI'
+  '0x89': 'MATIC'
 }
 
 function TokenBalanceCard(props) {
   const {account, provider, chainId } = props;
 
-  const decimals = 3;
-  const balance = useBalance(chainId, account, provider, decimals)
-  const tokenSymbol = chainIdToSymbol[chainId];
+  const roundedDigits = 3;
+  const balance = useBalance(account, provider, roundedDigits)
 
   if (balance) {
     return (
       <div>
-        {balance} {tokenSymbol}
+        {balance} {chainIdToNativeToken[chainId]}
       </div>
     )
   }
