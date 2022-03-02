@@ -3,22 +3,21 @@ pragma solidity ^0.8.4;
 import "hardhat/console.sol";
 
 contract Source {
+  uint constant DEPOSIT_CONTRACT_TREE_DEPTH = 32;
+  uint constant CONTRACT_FEE_BASIS_POINTS = 5;
+  uint constant MAX_DEPOSIT_COUNT = 2**DEPOSIT_CONTRACT_TREE_DEPTH - 1;
 
-  uint CONTRACT_FEE_BASIS_POINTS = 5;
+  uint256 nextTransferID;
+  bytes32[DEPOSIT_CONTRACT_TREE_DEPTH] branch;
+  bytes32[DEPOSIT_CONTRACT_TREE_DEPTH] zero_hashes;
 
   event Hm(bytes32);
 
-  // struct TransferData {
-  //   address tokenAddress;
-  //   address destination;
-  //   uint amount;
-  //   uint fee;
-  //   uint startTime;
-  //   uint feeRampup;
-  // }
-
-// TODO: change
-  uint nextTransferID = 1;
+  constructor() {
+      // Compute hashes in empty sparse Merkle tree
+      for (uint height = 0; height < DEPOSIT_CONTRACT_TREE_DEPTH - 1; height++)
+        zero_hashes[height + 1] = sha256(abi.encodePacked(zero_hashes[height], zero_hashes[height]));
+  }
 
   function withdraw(
       address tokenAddress,
@@ -38,12 +37,6 @@ contract Source {
     // // TODO: params: from, to
     // // tokenAddress.transferFrom(_, _, amountPlusFee);
 
-    // bytes memory little_endian_amount = to_little_endian_256(amount);
-    // bytes memory little_endian_fee = to_little_endian_256(fee);
-    // bytes memory little_endian_startTime = to_little_endian_256(startTime);
-    // bytes memory little_endian_feeRampup = to_little_endian_256(feeRampup);
-    // bytes memory little_endian_nextTransferID = to_little_endian_256(nextTransferID);
-
     bytes32 left_node = sha256(abi.encodePacked(tokenAddress, bytes12(0), destination, bytes12(0)));
     bytes32 mid_node = sha256(abi.encodePacked(to_little_endian_256(amount), to_little_endian_256(fee)));
     bytes32 right_node = sha256(abi.encodePacked(to_little_endian_256(startTime), to_little_endian_256(feeRampup)));
@@ -52,16 +45,23 @@ contract Source {
       sha256(abi.encodePacked(left_node, mid_node)),
       sha256(abi.encodePacked(right_node, zero_hash))
     ));
-    // TODO: change tokenAddress below
     bytes32 node = sha256(abi.encodePacked(
-      sha256(abi.encodePacked(transfer_data_node, tokenAddress, bytes12(0))),
+      sha256(abi.encodePacked(transfer_data_node, this, bytes12(0))),
       sha256(abi.encodePacked(to_little_endian_256(nextTransferID), bytes32(0)))
     ));
 
     emit Hm(node);
 
-    // nextTransferID += 1;
-
+    nextTransferID += 1;
+    uint size = nextTransferID;
+    for (uint height = 0; height < DEPOSIT_CONTRACT_TREE_DEPTH; height++) {
+        if ((size & 1) == 1) {
+            branch[height] = node;
+            return;
+        }
+        node = sha256(abi.encodePacked(branch[height], node));
+        size /= 2;
+    }
   }
 
   // TODO: change header
