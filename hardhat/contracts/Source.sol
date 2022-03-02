@@ -17,7 +17,8 @@ contract Source {
   //   uint feeRampup;
   // }
 
-  uint nextTransferID;
+// TODO: change
+  uint nextTransferID = 1;
 
   function withdraw(
       address tokenAddress,
@@ -37,18 +38,24 @@ contract Source {
     // // TODO: params: from, to
     // // tokenAddress.transferFrom(_, _, amountPlusFee);
 
-    bytes memory little_endian_amount = to_little_endian_256(amount);
-    bytes memory little_endian_fee = to_little_endian_256(fee);
-    bytes memory little_endian_startTime = to_little_endian_256(startTime);
-    bytes memory little_endian_feeRampup = to_little_endian_256(feeRampup);
+    // bytes memory little_endian_amount = to_little_endian_256(amount);
+    // bytes memory little_endian_fee = to_little_endian_256(fee);
+    // bytes memory little_endian_startTime = to_little_endian_256(startTime);
+    // bytes memory little_endian_feeRampup = to_little_endian_256(feeRampup);
+    // bytes memory little_endian_nextTransferID = to_little_endian_256(nextTransferID);
 
     bytes32 left_node = sha256(abi.encodePacked(tokenAddress, bytes12(0), destination, bytes12(0)));
-    bytes32 mid_node = sha256(abi.encodePacked(little_endian_amount, little_endian_fee));
-    bytes32 right_node = sha256(abi.encodePacked(little_endian_startTime, little_endian_feeRampup));
+    bytes32 mid_node = sha256(abi.encodePacked(to_little_endian_256(amount), to_little_endian_256(fee)));
+    bytes32 right_node = sha256(abi.encodePacked(to_little_endian_256(startTime), to_little_endian_256(feeRampup)));
     bytes32 zero_hash = sha256(abi.encodePacked(bytes32(0), bytes32(0)));
-    bytes32 node = sha256(abi.encodePacked(
+    bytes32 transfer_data_node = sha256(abi.encodePacked(
       sha256(abi.encodePacked(left_node, mid_node)),
       sha256(abi.encodePacked(right_node, zero_hash))
+    ));
+    // TODO: change tokenAddress below
+    bytes32 node = sha256(abi.encodePacked(
+      sha256(abi.encodePacked(transfer_data_node, tokenAddress, bytes12(0))),
+      sha256(abi.encodePacked(to_little_endian_256(nextTransferID), bytes32(0)))
     ));
 
     emit Hm(node);
